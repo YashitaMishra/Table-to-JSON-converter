@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Table-anchored PDF viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<header id="toolbar">
+    <select id="source-picker" title="Choose a source PDF + its extracted JSON"></select>
+    <button id="upload-btn" type="button" title="Upload a new PDF; extraction starts automatically">+ Upload PDF</button>
+    <input id="upload-input" type="file" accept="application/pdf,.pdf" hidden>
+    <div class="spacer"></div>
+    <div id="status">loading…</div>
+    <div class="spacer"></div>
+    <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
+        <span id="zoom-readout" aria-live="polite">100%</span>
+        <button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+    </div>
+</header>
+
+<!-- Extraction progress drawer (bottom-right). Populated while textract runs after an upload. -->
+<aside id="extract-drawer" hidden>
+    <div class="ex-head">
+        <div class="ex-title">Extracting <span class="ex-filename"></span></div>
+        <button class="ex-close" type="button" aria-label="Hide" title="Hide">−</button>
+    </div>
+    <pre class="ex-log"></pre>
+    <div class="ex-status">running…</div>
+</aside>
+
+<main id="layout">
+    <!-- Left: PDF.js renders each page as a canvas inside #pdf-viewer. Overlay div sits absolutely on top of each page for click-to-highlight rectangles. -->
+    <section id="pdf-pane">
+        <div id="pdf-viewer"></div>
+    </section>
+
+    <!-- Right: scrollable tree of extracted tables. Each card has a click target that scrolls the PDF to that page + highlights its bbox. -->
+    <aside id="tree-pane">
+        <div id="tree"></div>
+    </aside>
+</main>
+
+<!-- Floating tooltip used for hover-preview of discussion paragraphs. -->
+<div id="tooltip" hidden></div>
+
+<!-- Bottom-left context card. Populated when a table is clicked: title + page meta + the narrative paragraphs that reference this
+ table + footnote definitions. -->
+<aside id="context-popup" hidden aria-live="polite">
+    <div class="ctx-controls">
+        <button class="ctx-min" type="button" aria-label="Minimize context panel" title="Minimize">–</button>
+    </div>
+    <div class="ctx-title"></div>
+    <div class="ctx-meta"></div>
+    <div class="ctx-body"></div>
+</aside>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

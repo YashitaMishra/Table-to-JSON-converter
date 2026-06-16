@@ -1,0 +1,23 @@
+# --- secrets ---
+.env
+
+# --- logs (incl. the bare 'log' file: holds an old Groq key-prefix + org id) ---
+*.log
+log
+
+# --- extracted outputs (derived from proprietary PDFs) ---
+*.json
+!package.json
+
+# --- proprietary clinical-trial PDFs ---
+*.pdf
+
+# --- dev/prototype scripts that embed real protocol table data ---
+verify_page34.py
+vector_check.py
+
+# --- python / os cruft ---
+__pycache__/
+*.pyc
+.DS_Store
+.cache/

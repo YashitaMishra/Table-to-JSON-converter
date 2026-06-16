@@ -1,0 +1,681 @@
+/* design tokens */
+:root {
+    --bg:          #f4f6fa;       /* whole page */
+    --surface:     #ffffff;       /* cards, toolbar */
+    --surface-2:   #f1f3f7;       /* chips, hover backgrounds */
+    --sidebar-bg:  #f8f9fb;       /* the sidebar */
+    --ink:         #1a1d23;
+    --ink-2:       #495057;
+    --ink-3:       #7a8194;
+    --ink-4:       #adb5bd;
+    --line:        #e6e8ee;
+    --line-strong: #d4d8e0;
+
+    /* PDF pane (dark) */
+    --pdf-bg:      #232730;
+
+    /* accent */
+    --accent:      #4f46e5;
+    --accent-soft: #eef0ff;
+
+    /* highlight */
+    --hl:          #f59e0b;
+    --hl-soft:     rgba(245, 158, 11, 0.18);
+
+    /* tag pills */
+    --toc-bg:      #fef3c7;
+    --toc-fg:      #92400e;
+
+    /* shadows */
+    --shadow-sm:   0 1px 2px rgba(15, 23, 42, .04);
+    --shadow-md:   0 1px 3px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .04);
+    --shadow-lg:   0 2px 6px rgba(15, 23, 42, .07), 0 12px 32px rgba(15, 23, 42, .08);
+    --shadow-header: 0 1px 0 rgba(15, 23, 42, .04), 0 4px 16px rgba(15, 23, 42, .04);
+    --shadow-sidebar: -1px 0 0 var(--line), -8px 0 24px rgba(15, 23, 42, .03);
+    --shadow-page:   0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .2);
+    --r-sm: 6px;
+    --r-md: 8px;
+    --r-lg: 12px;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* base */
+* { box-sizing: border-box; }
+html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13.5px; line-height: 1.5;
+    color: var(--ink); background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button { font: inherit; }
+
+/*toolbar*/
+#toolbar {
+    display: flex; align-items: center; gap: 16px;
+    height: 60px;
+    padding: 0 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-header);
+    position: relative; z-index: 10;
+}
+#toolbar .spacer { flex: 1; }
+
+/* custom dropdown*/
+#source-picker {
+    appearance: none; -webkit-appearance: none;
+    font: inherit; font-size: 13px; font-weight: 500;
+    color: var(--ink);
+    padding: 8px 36px 8px 14px;
+    min-width: 320px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background-color: var(--surface);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+}
+#source-picker:hover {
+    border-color: var(--ink-3);
+    box-shadow: var(--shadow-md);
+}
+#source-picker:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .18);
+}
+
+/* upload button */
+#upload-btn {
+    appearance: none; -webkit-appearance: none;
+    font: inherit; font-size: 12.5px; font-weight: 600;
+    color: #fff;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background .12s var(--ease), transform .12s var(--ease), box-shadow .12s var(--ease);
+}
+#upload-btn:hover  { background: #6d63eb; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+#upload-btn:active { transform: none; }
+#upload-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .25);
+}
+
+/* extract progress drawer.
+   Explicit height + resize:both so the user can drag the bottom-LEFT corner to grow it.
+   (right/bottom anchor means the resize handle visually appears at the top-left.) */
+#extract-drawer {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 460px;
+    height: 360px;
+    min-width: 320px; min-height: 80px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 100px);
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    overflow: hidden;             /* required for resize to render the corner handle */
+    resize: both;                 /* drag the corner to resize */
+    animation: ctx-pop-in .22s var(--ease) both;
+}
+
+/* Minimized: collapse to the title-bar row. The minimize button flips to "+". Use !important to override the resize-set inline 
+height. */
+#extract-drawer.minimized {
+    height: auto !important;
+    resize: none;
+}
+#extract-drawer.minimized .ex-log,
+#extract-drawer.minimized .ex-status {
+    display: none;
+}
+#extract-drawer.minimized .ex-head {
+    border-bottom: 0;
+}
+.ex-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+}
+.ex-title    { flex: 1; font-size: 13px; font-weight: 600; color: var(--ink);
+               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-filename { color: var(--ink-2); font-weight: 400; }
+.ex-close {
+    width: 26px; height: 26px;
+    border: 0; background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-radius: var(--r-sm);
+    font: 600 16px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .12s var(--ease), color .12s var(--ease);
+}
+.ex-close:hover { background: var(--surface-2); color: var(--ink); }
+.ex-log {
+    flex: 1; overflow-y: auto;
+    margin: 0; padding: 10px 14px;
+    font: 11.5px/1.5 "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color: var(--ink-2);
+    background: #fafbfd;
+    white-space: pre-wrap; word-break: break-word;
+}
+.ex-status {
+    padding: 8px 14px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px; font-weight: 500;
+    color: var(--ink-3);
+}
+.ex-status--ok    { color: #166534; background: #f0fdf4; }
+.ex-status--error { color: #991b1b; background: #fef2f2; }
+
+/* status pill*/
+#status {
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    padding: 6px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    letter-spacing: .005em;
+}
+
+/* zoom group */
+.zoom-group {
+    display: inline-flex; align-items: stretch;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.zoom-group button {
+    border: 0; background: transparent;
+    color: var(--ink-2);
+    width: 36px; height: 34px;
+    cursor: pointer;
+    font-size: 18px; font-weight: 500; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .12s var(--ease), color .12s var(--ease);
+}
+.zoom-group button:hover { background: var(--surface-2); color: var(--ink); }
+.zoom-group button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+.zoom-group #zoom-readout {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 56px; padding: 0 4px;
+    font-size: 12px; color: var(--ink-2);
+    font-variant-numeric: tabular-nums; font-weight: 500;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+}
+
+/* layout */
+#layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) 480px;
+    height: calc(100vh - 60px); overflow: hidden;
+}
+
+/* PDF pane*/
+#pdf-pane {
+    overflow: auto;
+    background: var(--pdf-bg);
+    background-image: radial-gradient(rgba(255,255,255,.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+    padding: 24px;
+}
+#pdf-viewer {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.pdf-page {
+    position: relative; background: var(--surface);
+    box-shadow: var(--shadow-page);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.pdf-page canvas { display: block; }
+.pdf-page .overlay { position: absolute; inset: 0; pointer-events: none; }
+
+/* Link annotations — invisible hit-areas over the canvas; subtle tint on hover so a
+   reviewer can see what's clickable. Children re-enable pointer-events that the overlay
+   container disables. */
+.pdf-page .overlay .pdf-link {
+    position: absolute;
+    pointer-events: auto;
+    cursor: pointer;
+    border-radius: 2px;
+}
+.pdf-page .overlay .pdf-link:hover {
+    background: rgba(79, 70, 229, .12);
+    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, .35);
+}
+
+/* skeleton for unrendered pages */
+.pdf-page.is-placeholder {
+    background: linear-gradient(135deg, #f9fafc 0%, #eef0f3 100%);
+    display: flex; align-items: center; justify-content: center;
+}
+.page-placeholder {
+    font-size: 12px; color: var(--ink-3); font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    position: relative; padding: 8px 18px;
+    border-radius: 999px; background: rgba(255, 255, 255, .75);
+    border: 1px solid rgba(15, 23, 42, .06);
+    overflow: hidden;
+}
+.page-placeholder::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* clicked-table highlight */
+.hl-rect {
+    position: absolute;
+    border: 2px solid var(--hl);
+    background: var(--hl-soft);
+    border-radius: 4px; pointer-events: none;
+    animation: pulse 1.8s ease-out 1;
+}
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0    rgba(245, 158, 11, .55); }
+    70%  { box-shadow: 0 0 0 18px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0    rgba(245, 158, 11, 0); }
+}
+
+/* red variant for failed tables — the box itself signals "needs review" */
+.hl-rect--failed {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, .14);
+    animation: pulse-red 1.8s ease-out 1;
+}
+@keyframes pulse-red {
+    0%   { box-shadow: 0 0 0 0    rgba(220, 38, 38, .5); }
+    70%  { box-shadow: 0 0 0 18px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0    rgba(220, 38, 38, 0); }
+}
+
+/* sidebar*/
+#tree-pane {
+    overflow: auto;
+    background: var(--sidebar-bg);
+    box-shadow: var(--shadow-sidebar);
+}
+#tree { padding: 16px 18px 96px; }
+
+/* table card */
+.table-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    margin: 10px 0;
+    box-shadow: var(--shadow-sm);
+    transition:
+        transform .18s var(--ease),
+        box-shadow .18s var(--ease),
+        border-color .18s var(--ease);
+}
+.table-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+}
+.table-card.open {
+    transform: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-soft) inset;
+}
+
+.table-card .head {
+    padding: 14px 16px;
+    cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 10px;
+}
+
+.table-card .chevron {
+    width: 14px; height: 14px;
+    color: var(--ink-3);
+    flex-shrink: 0;
+    transition: transform .18s var(--ease);
+}
+.table-card.open .chevron { transform: rotate(90deg); }
+
+.table-card .head .title {
+    flex: 1; min-width: 0;
+    font-size: 14px; font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.table-card .head .title.fallback {
+    font-weight: 400; font-style: italic; color: var(--ink-3);
+}
+
+.table-card .head .page-badge {
+    margin-left: auto;
+    font-size: 11.5px; font-weight: 400;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Source-type pill: neutral background for both kinds — the icon (cloud vs hard drive)
+   carries the distinction. Bold colors are reserved for actions and errors. */
+.table-card .head .backend {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.table-card .backend .backend-icon {
+    width: 11px; height: 11px;
+    flex-shrink: 0;
+}
+.table-card .kind-badge {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: var(--toc-bg); color: var(--toc-fg);
+}
+/* failed extraction — whole card turns red so it can't be missed in the list */
+.table-card.failed {
+    border-color: #fca5a5;
+    background: #fff7f7;
+}
+.table-card.failed:hover { border-color: #f87171; }
+.table-card.failed.open {
+    border-color: #dc2626;
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(220, 38, 38, .12) inset;
+}
+.table-card .fail-badge {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: #fee2e2; color: #991b1b;
+    animation: review-pulse 1.6s ease-out 2;
+}
+.fail-note {
+    background: #fef2f2;
+    border-left: 3px solid #dc2626;
+    padding: 10px 14px; margin: 12px 0 4px;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    font-size: 12.5px; line-height: 1.5;
+    color: #7f1d1d;
+}
+
+/* Pending-human-review: muted blue, no animation — red + motion stay reserved for hard failures. */
+.table-card .review-badge {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: #e0f2fe; color: #075985;
+}
+@keyframes review-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, .35); }
+    50%      { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0);  }
+}
+
+/* Context-popup: confidence section (shown when _confidence is present on the table) */
+#context-popup .ctx-confidence {
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--r-sm);
+    border-left: 3px solid var(--ink-3);
+    font-size: 12.5px;
+}
+#context-popup .ctx-confidence--ok     { border-left-color: #15803d; }
+#context-popup .ctx-confidence--review { border-left-color: #0284c7; background: #f0f9ff; }
+#context-popup .ctx-confidence .conf-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 2px 0;
+}
+#context-popup .ctx-confidence .conf-label { color: var(--ink-3); font-weight: 500; letter-spacing: .03em; }
+#context-popup .ctx-confidence .conf-value { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+#context-popup .ctx-confidence--review .conf-value { color: #991b1b; }
+
+
+.table-card .body {
+    display: none;
+    padding: 4px 18px 18px;
+    border-top: 1px solid var(--line);
+}
+.table-card.open .body { display: block; }
+
+.section-title {
+    font-size: 10.5px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+    margin: 18px 0 8px;
+}
+
+/* JSON tree */
+ul.json {
+    list-style: none; padding-left: 18px; margin: 0;
+    font: 12px/1.6 "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+ul.json > li { position: relative; }
+ul.json li {
+    padding: 1px 6px; border-radius: 4px;
+    transition: background .12s var(--ease);
+}
+ul.json li:hover { background: var(--surface-2); }
+ul.json .key     { color: #0b5394; font-weight: 500; }
+ul.json .str     { color: #1f7a3f; }
+ul.json .num     { color: #b1531d; }
+ul.json .bool    { color: var(--ink-3); }
+ul.json .nil     { color: var(--ink-3); font-style: italic; }
+ul.json .bracket { color: var(--ink-3); }
+
+ul.json .collapse {
+    display: inline-block;
+    width: 12px; height: 12px;
+    margin-right: 4px;
+    vertical-align: -2px;
+    color: var(--ink-3);
+    cursor: pointer; user-select: none;
+    transition: transform .15s var(--ease);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a8194' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 6 15 12 9 18'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+ul.json li:not(.collapsed) > .collapse { transform: rotate(90deg); }
+ul.json li.collapsed > ul { display: none; }
+
+/* discussion */
+
+.discussion {
+    background: linear-gradient(180deg, #f0f5ff 0%, #e1ebff 100%);
+    border-left: 3px solid #4a78d6;
+    padding: 10px 14px; margin: 8px 0;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    font-size: 12.5px; line-height: 1.5;
+    cursor: pointer;
+    transition: filter .15s var(--ease);
+}
+.discussion:hover { filter: brightness(.97); }
+.discussion .page-tag {
+    font-size: 11px; color: #2c4d99; font-weight: 700;
+    margin-right: 8px;
+    background: rgba(74, 120, 214, .15);
+    padding: 1px 6px; border-radius: 4px;
+}
+
+/* tooltip*/
+#tooltip {
+    position: absolute; z-index: 1000; max-width: 380px;
+    padding: 12px 14px;
+    background: #1a1d23; color: #f6f7f9;
+    border-radius: var(--r-md);
+    font-size: 12.5px; line-height: 1.5;
+    box-shadow: 0 8px 32px rgba(0,0,0,.32);
+    border: 1px solid rgba(255,255,255,.06);
+}
+
+/* context popup (bottom-left, over the PDF pane)*/
+#context-popup {
+    position: fixed;
+    bottom: 20px; left: 20px;
+    width: 380px;
+    height: 380px;                     /* explicit height so resize works */
+    min-width: 280px; min-height: 80px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 100px);
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 18px 20px 16px;
+    z-index: 100;
+    overflow: hidden;                  /* required for resize*/
+    resize: both;                      /* drag bottom-right corner to resize */
+    animation: ctx-pop-in .22s var(--ease) both;
+}
+@keyframes ctx-pop-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Minimized state — collapses to a header bar so the popup gets out of the way without
+   losing context. */
+#context-popup.minimized {
+    height: auto !important;           /* override resize-set height */
+    resize: none;
+}
+#context-popup.minimized .ctx-meta,
+#context-popup.minimized .ctx-body {
+    display: none;
+}
+#context-popup.minimized .ctx-title {
+    margin-bottom: 0;
+}
+
+/* Controls cluster (minimize + close) */
+#context-popup .ctx-controls {
+    position: absolute; top: 8px; right: 8px;
+    display: inline-flex; gap: 2px;
+    z-index: 1;                        /* above the resize handle visually */
+}
+#context-popup .ctx-controls button {
+    width: 28px; height: 28px;
+    border: 0; background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-radius: var(--r-sm);
+    font: 600 18px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .12s var(--ease), color .12s var(--ease);
+}
+#context-popup .ctx-controls button:hover { background: var(--surface-2); color: var(--ink); }
+#context-popup .ctx-controls .ctx-min { padding-bottom: 4px; }  
+#context-popup .ctx-title {
+    font-size: 14.5px; font-weight: 600;
+    color: var(--ink);
+    padding-right: 36px;     
+    margin-bottom: 6px;
+    line-height: 1.35;
+}
+#context-popup .ctx-meta {
+    font-size: 11px; font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: .04em; text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+}
+#context-popup .ctx-body {
+    overflow-y: auto;
+    flex: 1;
+    font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+}
+#context-popup .ctx-section-title {
+    font-size: 10.5px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+    margin: 10px 0 4px;
+}
+#context-popup .ctx-section-title:first-child { margin-top: 0; }
+#context-popup .ctx-paragraph {
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--r-sm);
+    border-left: 2px solid var(--accent);
+}
+#context-popup .ctx-more {
+    font-size: 11.5px; color: var(--ink-3);
+    font-style: italic;
+    margin-top: 4px;
+}
+#context-popup .ctx-footnote {
+    margin: 6px 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+#context-popup .ctx-footnote .marker {
+    display: inline-block;
+    background: rgba(192, 138, 49, .15);
+    color: #6b3a00;
+    font-weight: 700;
+    padding: 1px 6px; border-radius: 4px;
+    margin-right: 6px;
+    font-size: 11px;
+}
+#context-popup .ctx-failed {
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border-left: 3px solid #dc2626;
+    border-radius: var(--r-sm);
+    color: #7f1d1d;
+    font-size: 12.5px; line-height: 1.5;
+}
+#context-popup .ctx-empty {
+    color: var(--ink-3);
+    font-style: italic;
+    font-size: 12.5px;
+    padding: 8px 0;
+}
+
+/* scrollbars  */
+#pdf-pane::-webkit-scrollbar,
+#tree-pane::-webkit-scrollbar { width: 10px; height: 10px; }
+#pdf-pane::-webkit-scrollbar-track  { background: transparent; }
+#pdf-pane::-webkit-scrollbar-thumb  {
+    background: rgba(255,255,255,.12); border-radius: 999px;
+    border: 2px solid var(--pdf-bg);
+}
+#pdf-pane::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.22); }
+#tree-pane::-webkit-scrollbar-track  { background: transparent; }
+#tree-pane::-webkit-scrollbar-thumb  {
+    background: rgba(15,23,42,.12); border-radius: 999px;
+    border: 2px solid var(--sidebar-bg);
+}
+#tree-pane::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,.2); }
